@@ -4,19 +4,24 @@ from fastapi.background import BackgroundTasks
 from redis_om import get_redis_connection, HashModel
 from starlette.requests import Request
 import requests, time
+import os
+
+
+INVENTORY_SERVICE_URL = os.environ.get("INVENTORY_SERVICE_URL", "http://localhost:8000")
+REDIS_URL = os.environ.get("REDIS_URL", "http://localhost:6379")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://192.168.24.102:3000'],
+    allow_origins=['*'],
     allow_methods=['*'],
     allow_headers=['*']
 )
 
 # This should be a different database
 redis = get_redis_connection(
-    host="localhost",
+    host=REDIS_URL,
     port=6379,
     password="",
     decode_responses=True
@@ -63,7 +68,7 @@ def get(pk: str):
 async def create(request: Request, background_tasks: BackgroundTasks):  # id, quantity
     body = await request.json()
 
-    req = requests.get('http://192.168.24.102:8000/products/%s' % body['id'])
+    req = requests.get(f'{INVENTORY_SERVICE_URL}/products/%s' % body['id'])
     product = req.json()
 
     order = Order(

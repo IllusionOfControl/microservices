@@ -1,15 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis_om import get_redis_connection, HashModel
+import os
 
+
+PAYMENT_SERVICE_URL = os.environ.get("PAYMENT_SERVICE_URL", "http://localhost:8001")
+REDIS_URL = os.environ.get("REDIS_URL", "http://localhost:6379")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://192.168.24.102:3000",
-        "http://localhost:3000",
         "*"
     ],
     allow_methods=["*"],
@@ -17,7 +19,7 @@ app.add_middleware(
 )
 
 redis = get_redis_connection(
-    host="localhost",
+    host=REDIS_URL,
     port=6379,
     password="",
     decode_responses=True
