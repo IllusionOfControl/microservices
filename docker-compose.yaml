@@ -1,0 +1,58 @@
+version: "3.3"
+
+networks:
+  backend:
+    ipam:
+      config:
+        - subnet: 172.1.0.0/24
+  frontend:
+
+services:
+  db:
+    image: redis/redis-stack-server:latest
+    hostname: redis
+    networks:
+      backend:
+        ipv4_address: 172.1.0.2
+
+  inventory:
+    container_name: inventory
+    build: inventory/.
+    hostname: inventory
+    ports: 
+      - "8000:8000"
+    networks:
+      backend:
+        ipv4_address: 172.1.0.3
+    environment:
+      - PAYMENT_SERVICE_URL="http://payment:8000"
+    depends_on:
+      - db
+    
+  
+  payment:
+    container_name: payment
+    hostname: payment
+    build: payment/.
+    ports: 
+      - "8001:8000"
+    networks:
+      backend:
+        ipv4_address: 172.1.0.4
+    environment:
+      - INVENTORY_SERVICE_URL="http://inventory:8000"
+      - REDIS_URL="http://redis:6379"
+    depends_on:
+      - db
+
+  web:
+    container_name: web
+    build: inventory-frontend/.
+    ports: 
+      - "3000:3000"
+    networks:
+      backend:
+        ipv4_address: 172.1.0.5
+      
+
+      
